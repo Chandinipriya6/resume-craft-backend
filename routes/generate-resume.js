@@ -13,7 +13,8 @@ router.post('/', async (req, res) => {
     education,
     experience,
     customSections,
-    template
+    template,
+    editingResumeId
   } = req.body;
 
   const formatList = (arr, keys) =>
