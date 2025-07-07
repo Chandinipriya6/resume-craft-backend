@@ -11,7 +11,7 @@ router.use((req, res, next) => {
     {
       global: {
         headers: {
-          Authorization: req.headers.authorization || ""
+          Authorization: req.headers['authorization'] || ""  // ✅ lowercase 'authorization'
         }
       }
     }
@@ -19,6 +19,7 @@ router.use((req, res, next) => {
   req.supabase = supabase;
   next();
 });
+
 
 // ✅ Test route
 //router.get("/test-delete", (req, res) => {
