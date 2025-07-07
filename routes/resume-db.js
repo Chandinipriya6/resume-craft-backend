@@ -54,7 +54,11 @@ router.get("/user/:id", async (req, res) => {
 // ✅ DELETE /delete/:id - delete a resume by ID with user check
 router.delete("/delete/:id", async (req, res) => {
   const id = req.params.id;
-  const user_id = req.headers["x-user-id"]; // 👤 Passed from frontend in headers
+  const user_id = req.headers["x-user-id"];
+
+  console.log("🗑️ DELETE request received for:");
+  console.log("🔹 resume ID:", id);
+  console.log("🔹 user ID from header:", user_id);
 
   if (!id || !user_id) {
     return res.status(400).json({ success: false, error: "Missing resume ID or user ID" });
@@ -65,17 +69,20 @@ router.delete("/delete/:id", async (req, res) => {
       .from("resumes")
       .delete()
       .eq("id", id)
-      .eq("user_id", user_id) // 🔐 Ensure user owns the resume
+      .eq("user_id", user_id)
       .select();
 
     if (error) {
+      console.error("❌ Supabase delete error:", error.message);
       return res.status(500).json({ success: false, error: error.message });
     }
 
     if (!data || data.length === 0) {
+      console.warn("⚠️ No data returned. Resume not found or not owned by user.");
       return res.status(404).json({ success: false, error: "Resume not found or unauthorized" });
     }
 
+    console.log("✅ Resume deleted:", data);
     res.status(200).json({ success: true, message: "Resume deleted successfully" });
   } catch (err) {
     console.error("❌ Delete error:", err.message);
