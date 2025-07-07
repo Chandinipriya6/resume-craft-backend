@@ -26,6 +26,81 @@ router.use((req, res, next) => {
  // res.send("✅ Delete route file is loaded");
 //});
 
+// ✅ POST /api/resumes - Save resume to Supabase
+router.post("/", async (req, res) => {
+  const { user_id, name, email, content, template_url } = req.body;
+
+  if (!user_id || !name || !email || !content) {
+    return res.status(400).json({ success: false, error: "Missing required fields" });
+  }
+
+  try {
+    const { data, error } = await req.supabase
+      .from("resumes")
+      .insert([{ user_id, name, email, content, template_url }])
+      .select()
+      .single();
+
+    if (error) {
+      return res.status(500).json({ success: false, error: error.message });
+    }
+
+    res.status(201).json({ success: true, resume: data });
+  } catch (err) {
+    console.error("❌ Insert error:", err.message);
+    res.status(500).json({ success: false, error: "Internal server error" });
+  }
+});
+
+// ✅ POST /api/resumes/save → Save a resume
+router.post('/save', async (req, res) => {
+  const {
+    user_id,
+    name,
+    email,
+    summary,
+    education,
+    experience,
+    skills,
+    custom_sections,
+    content,
+    template_url
+  } = req.body;
+
+  try {
+    const { data, error } = await req.supabase
+      .from('resumes')
+      .insert([
+        {
+          user_id,
+          name,
+          email,
+          summary,
+          education,
+          experience,
+          skills,
+          custom_sections,
+          content,
+          template_url
+        }
+      ])
+      .select();
+
+    if (error) throw error;
+
+    return res.status(200).json({
+      success: true,
+      resumeId: data[0].id,
+    });
+  } catch (err) {
+    console.error('❌ Error saving resume:', err.message);
+    return res.status(500).json({
+      success: false,
+      error: 'Failed to save resume',
+    });
+  }
+});
+
 // ✅ POST /delete - safer deletion with resume ID + user ID
 // ✅ GET resumes for a specific user
 router.get("/user/:id", async (req, res) => {
@@ -71,7 +146,7 @@ router.delete("/delete/:id", async (req, res) => {
       .delete()
       .eq("id", id)
       .eq("user_id", user_id)
-      .select();
+      //.select();
 
     if (error) {
       console.error("❌ Supabase delete error:", error.message);
