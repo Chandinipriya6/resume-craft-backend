@@ -26,6 +26,8 @@ const renderHtmlRoute = require('./routes/render-html');
 // ✅ Route Middleware
 app.use('/api/resume', resumeRoutes);
 app.use('/api/resumes', resumeDbRoutes); // includes /user/:id, /save, /resume/:id, etc.
+console.log("✅ Loaded resume-db routes under /api/resumes");
+
 app.use('/api/generate-resume', generateResumeRoute);
 app.use('/api/render-template', renderHtmlRoute);
 
