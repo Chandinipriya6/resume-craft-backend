@@ -51,6 +51,7 @@ router.post("/", async (req, res) => {
 });
 
 // POST /api/resumes/save → Save structured resume data
+// ✅ Save structured AI resume: POST /api/resumes/save
 router.post("/save", async (req, res) => {
   const {
     user_id,
@@ -63,29 +64,41 @@ router.post("/save", async (req, res) => {
     custom_sections
   } = req.body;
 
+  // ✅ Log incoming data
+  const resumePayload = {
+    user_id,
+    name,
+    email,
+    summary,
+    education,
+    experience,
+    skills,
+    custom_sections,
+  };
+
+  console.log("📥 Received resume data on backend:", JSON.stringify(resumePayload, null, 2));
+
   try {
     const { data, error } = await req.supabase
       .from("resumes")
-      .insert([{
-        user_id,
-        name,
-        email,
-        summary,
-        education,
-        experience,
-        skills,
-        custom_sections
-      }])
+      .insert([resumePayload])
       .select();
 
-    if (error) throw error;
+    if (error) {
+      console.error("❌ Supabase insert error:", error.message);
+      return res.status(500).json({ success: false, error: error.message });
+    }
 
-    res.status(200).json({ success: true, resumeId: data[0].id });
+    res.status(200).json({
+      success: true,
+      resumeId: data?.[0]?.id,
+    });
   } catch (err) {
-    console.error("❌ Error saving resume:", err.message);
-    res.status(500).json({ success: false, error: "Failed to save resume" });
+    console.error("❌ Unexpected error saving resume:", err.message);
+    res.status(500).json({ success: false, error: "Internal server error" });
   }
 });
+
 
 // GET /api/resumes/user/:user_id → Fetch all resumes for a user
 router.get('/user/:user_id', async (req, res) => {
