@@ -96,7 +96,7 @@ router.get('/user/:user_id', async (req, res) => {
   console.log("✅ Fetching resumes for user:", user_id); 
 
   try {
-    const { data, error } = await supabase
+    const { data, error } = await req.supabase  // ✅ fixed
       .from('resumes')
       .select('*')
       .eq('user_id', user_id)
