@@ -4,13 +4,11 @@ const dotenv = require('dotenv');
 dotenv.config();
 
 const app = express();
-//app.use(cors());
-//const cors = require("cors");
 
 app.use(cors({
   origin: [
-    "http://localhost:5173", 
-    "https://resume-craft-ochre.vercel.app", 
+    "http://localhost:5173",
+    "https://resume-craft-ochre.vercel.app",
     "https://resume-craft-8ujk7ww67-chandinipriya6s-projects.vercel.app"
   ],
   methods: ["GET", "POST", "PUT", "DELETE"],
@@ -19,31 +17,26 @@ app.use(cors({
 
 app.use(express.json());
 
-// ✅ Debugging
+// ✅ Environment Debug
 console.log("🧪 SUPABASE_URL:", process.env.SUPABASE_URL);
 console.log("🧪 SUPABASE_ANON_KEY present:", !!process.env.SUPABASE_ANON_KEY);
 console.log("🧪 GEMINI_API_KEY present:", !!process.env.GEMINI_API_KEY);
 
-// ✅ Health check
+// ✅ Health Route
 app.get('/', (req, res) => {
-  res.send("✅ SkillForge Backend Running with Gemini + Supabase");
+  res.send("✅ ResumeCraft Backend Running!");
 });
 
-// ✅ Route Imports
-const resumeRoutes = require('./routes/resume');
-const resumeDbRoutes = require('./routes/resume-db'); // 🟢 now handles ALL resume-related routes
-const generateResumeRoute = require('./routes/generate-resume');
-const renderHtmlRoute = require('./routes/render-html');
+// ✅ Import Routes
+const resumeDbRoutes = require('./routes/resume-db');
+const generateResumeRoute = require('./routes/generate-resume');  // You still need to add this file
+const renderHtmlRoute = require('./routes/render-html');           // Optional: for template preview if needed
 
-// ✅ Route Middleware
-app.use('/api/resume', resumeRoutes);
-app.use('/api/resumes', resumeDbRoutes); // includes /user/:id, /save, /resume/:id, etc.
-console.log("✅ Loaded resume-db routes under /api/resumes");
-
+// ✅ Use Routes
+app.use('/api/resumes', resumeDbRoutes);
 app.use('/api/generate-resume', generateResumeRoute);
 app.use('/api/render-template', renderHtmlRoute);
 
-// ✅ Start Server
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`🚀 Server running on http://localhost:${PORT}`);
