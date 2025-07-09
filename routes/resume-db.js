@@ -93,6 +93,7 @@ router.post("/save", async (req, res) => {
 // ✅ GET all resumes for a user
 router.get('/user/:user_id', async (req, res) => {
   const { user_id } = req.params;
+  console.log("✅ Fetching resumes for user:", user_id); 
 
   try {
     const { data, error } = await supabase
