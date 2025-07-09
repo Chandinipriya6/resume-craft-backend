@@ -1,9 +1,12 @@
-// ✅ resume-db.js (Backend)
 const express = require("express");
 const router = express.Router();
 const { createClient } = require("@supabase/supabase-js");
 
-// Inject Supabase client
+router.get('/test', (req, res) => {
+  res.json({ message: "Resume API working!" });
+});
+
+// Inject Supabase client into every request
 router.use((req, res, next) => {
   const supabase = createClient(
     process.env.SUPABASE_URL,
@@ -11,7 +14,7 @@ router.use((req, res, next) => {
     {
       global: {
         headers: {
-          Authorization: req.headers['authorization'] || ""  // ✅ lowercase 'authorization'
+          Authorization: req.headers['authorization'] || "" // Send Bearer token from frontend
         }
       }
     }
@@ -20,13 +23,7 @@ router.use((req, res, next) => {
   next();
 });
 
-
-// ✅ Test route
-//router.get("/test-delete", (req, res) => {
- // res.send("✅ Delete route file is loaded");
-//});
-
-// ✅ POST /api/resumes - Save resume to Supabase
+// ✅ POST /api/resumes → Save resume with content + template
 router.post("/", async (req, res) => {
   const { user_id, name, email, content, template_url } = req.body;
 
@@ -52,8 +49,8 @@ router.post("/", async (req, res) => {
   }
 });
 
-// ✅ POST /api/resumes/save → Save a resume
-router.post('/save', async (req, res) => {
+// ✅ POST /api/resumes/save → Save resume with detailed fields
+router.post("/save", async (req, res) => {
   const {
     user_id,
     name,
@@ -62,47 +59,37 @@ router.post('/save', async (req, res) => {
     education,
     experience,
     skills,
-    custom_sections,
-    content,
-    template_url
+    custom_sections
   } = req.body;
 
   try {
     const { data, error } = await req.supabase
-      .from('resumes')
-      .insert([
-        {
-          user_id,
-          name,
-          email,
-          summary,
-          education,
-          experience,
-          skills,
-          custom_sections,
-          content,
-          template_url
-        }
-      ])
+      .from("resumes")
+      .insert([{
+        user_id,
+        name,
+        email,
+        summary,
+        education,
+        experience,
+        skills,
+        custom_sections
+      }])
       .select();
 
     if (error) throw error;
 
-    return res.status(200).json({
+    res.status(200).json({
       success: true,
       resumeId: data[0].id,
     });
   } catch (err) {
-    console.error('❌ Error saving resume:', err.message);
-    return res.status(500).json({
-      success: false,
-      error: 'Failed to save resume',
-    });
+    console.error("❌ Error saving resume:", err.message);
+    res.status(500).json({ success: false, error: "Failed to save resume" });
   }
 });
 
-// ✅ POST /delete - safer deletion with resume ID + user ID
-// ✅ GET resumes for a specific user
+// ✅ GET /api/resumes/user/:id → Get all resumes for a user
 router.get("/user/:id", async (req, res) => {
   const user_id = req.params.id;
 
@@ -127,12 +114,13 @@ router.get("/user/:id", async (req, res) => {
     res.status(500).json({ success: false, error: "Internal server error" });
   }
 });
-// ✅ DELETE /delete/:id - delete a resume by ID with user check
+
+// ✅ DELETE /api/resumes/delete/:id → Delete a resume by ID if owned by user
 router.delete("/delete/:id", async (req, res) => {
   const id = req.params.id;
   const user_id = req.headers["x-user-id"];
 
-  console.log("🗑️ DELETE request received for:");
+  console.log("🗑 DELETE request received for:");
   console.log("🔹 resume ID:", id);
   console.log("🔹 user ID from header:", user_id);
 
@@ -146,7 +134,7 @@ router.delete("/delete/:id", async (req, res) => {
       .delete()
       .eq("id", id)
       .eq("user_id", user_id)
-      //.select();
+      .select();
 
     if (error) {
       console.error("❌ Supabase delete error:", error.message);
@@ -154,7 +142,7 @@ router.delete("/delete/:id", async (req, res) => {
     }
 
     if (!data || data.length === 0) {
-      console.warn("⚠️ No data returned. Resume not found or not owned by user.");
+      console.warn("⚠ No data returned. Resume not found or not owned by user.");
       return res.status(404).json({ success: false, error: "Resume not found or unauthorized" });
     }
 
@@ -165,6 +153,5 @@ router.delete("/delete/:id", async (req, res) => {
     res.status(500).json({ success: false, error: "Server error" });
   }
 });
-
 
 module.exports = router;
