@@ -90,28 +90,23 @@ router.post("/save", async (req, res) => {
 });
 
 // ✅ GET /api/resumes/user/:id → Get all resumes for a user
-router.get("/user/:id", async (req, res) => {
-  const user_id = req.params.id;
-
-  if (!user_id) {
-    return res.status(400).json({ success: false, error: "Missing user ID" });
-  }
+// ✅ GET all resumes for a user
+router.get('/user/:user_id', async (req, res) => {
+  const { user_id } = req.params;
 
   try {
-    const { data, error } = await req.supabase
-      .from("resumes")
-      .select("*")
-      .eq("user_id", user_id)
-      .order("created_at", { ascending: false });
+    const { data, error } = await supabase
+      .from('resumes')
+      .select('*')
+      .eq('user_id', user_id)
+      .order('created_at', { ascending: false });
 
-    if (error) {
-      return res.status(500).json({ success: false, error: error.message });
-    }
+    if (error) throw error;
 
-    res.status(200).json({ success: true, resumes: data });
+    res.json(data);
   } catch (err) {
-    console.error("❌ Fetch error:", err.message);
-    res.status(500).json({ success: false, error: "Internal server error" });
+    console.error('❌ Error fetching resumes:', err.message);
+    res.status(500).json({ error: 'Failed to fetch resumes' });
   }
 });
 
