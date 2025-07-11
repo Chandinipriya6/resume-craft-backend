@@ -50,8 +50,7 @@ router.post("/", async (req, res) => {
   }
 });
 
-// POST /api/resumes/save → Save structured resume data
-// ✅ Save structured AI resume: POST /api/resumes/save
+// POST /api/resumes/save → Save structured AI-generated resume
 router.post("/save", async (req, res) => {
   const {
     user_id,
@@ -61,10 +60,10 @@ router.post("/save", async (req, res) => {
     education,
     experience,
     skills,
-    custom_sections
+    custom_sections,
+    template_url
   } = req.body;
 
-  // ✅ Log incoming data
   const resumePayload = {
     user_id,
     name,
@@ -74,6 +73,7 @@ router.post("/save", async (req, res) => {
     experience,
     skills,
     custom_sections,
+    template_url,
   };
 
   console.log("📥 Received resume data on backend:", JSON.stringify(resumePayload, null, 2));
@@ -99,11 +99,10 @@ router.post("/save", async (req, res) => {
   }
 });
 
-
 // GET /api/resumes/user/:user_id → Fetch all resumes for a user
 router.get('/user/:user_id', async (req, res) => {
   const { user_id } = req.params;
-  console.log("✅ Fetching resumes for user:", user_id); 
+  console.log("✅ Fetching resumes for user:", user_id);
 
   try {
     const { data, error } = await req.supabase
@@ -121,12 +120,91 @@ router.get('/user/:user_id', async (req, res) => {
   }
 });
 
+// GET /api/resumes/:id → Publicly fetch a resume by ID
+router.get('/:id', async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const { data, error } = await req.supabase
+      .from('resumes')
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    if (error || !data) {
+      return res.status(404).json({ error: 'Resume not found' });
+    }
+
+    return res.status(200).json(data);
+  } catch (err) {
+    console.error('❌ Error fetching public resume:', err.message);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// POST /api/resumes/update/:id → Update resume if owned by user
+router.post('/update/:id', async (req, res) => {
+  const resumeId = req.params.id;
+
+  const {
+    name,
+    email,
+    summary,
+    education,
+    experience,
+    skills,
+    custom_sections,
+    template_url
+  } = req.body;
+
+  const authHeader = req.headers.authorization || '';
+  const token = authHeader.replace('Bearer ', '');
+
+  // Create Supabase Admin client to get user ID from token
+  const supabaseAdmin = createClient(
+    process.env.SUPABASE_URL,
+    process.env.SUPABASE_SERVICE_ROLE_KEY
+  );
+
+  const { data: { user }, error: userError } = await supabaseAdmin.auth.getUser(token);
+
+  if (userError || !user) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+
+  const user_id = user.id;
+
+  try {
+    const { error } = await req.supabase
+      .from('resumes')
+      .update({
+        name,
+        email,
+        summary,
+        education,
+        experience,
+        skills,
+        custom_sections,
+        template_url
+      })
+      .eq('id', resumeId)
+      .eq('user_id', user_id); // ✅ Only allow updating own resume
+
+    if (error) throw error;
+
+    return res.status(200).json({ message: "Resume updated successfully." });
+  } catch (err) {
+    console.error("❌ Update error:", err.message);
+    return res.status(500).json({ error: 'Server error' });
+  }
+});
+
 // DELETE /api/resumes/delete/:id → Delete a resume if owned by user
 router.delete("/delete/:id", async (req, res) => {
-  const id = req.params.id;
-  const user_id = req.headers["x-user-id"];
+  const resumeId = req.params.id;
+  const userId = req.headers["x-user-id"];
 
-  if (!id || !user_id) {
+  if (!resumeId || !userId) {
     return res.status(400).json({ success: false, error: "Missing resume ID or user ID" });
   }
 
@@ -134,8 +212,8 @@ router.delete("/delete/:id", async (req, res) => {
     const { data, error } = await req.supabase
       .from("resumes")
       .delete()
-      .eq("id", id)
-      .eq("user_id", user_id)
+      .eq("id", resumeId)
+      .eq("user_id", userId)
       .select();
 
     if (error) {
@@ -147,11 +225,12 @@ router.delete("/delete/:id", async (req, res) => {
       return res.status(404).json({ success: false, error: "Resume not found or unauthorized" });
     }
 
-    res.status(200).json({ success: true, message: "Resume deleted successfully" });
+    return res.status(200).json({ success: true, message: "Resume deleted successfully" });
   } catch (err) {
     console.error("❌ Delete error:", err.message);
-    res.status(500).json({ success: false, error: "Server error" });
+    return res.status(500).json({ success: false, error: "Server error" });
   }
 });
+
 
 module.exports = router;

@@ -1,3 +1,5 @@
+// index.js
+
 const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
@@ -14,29 +16,29 @@ app.use(cors({
   methods: ["GET", "POST", "PUT", "DELETE"],
   credentials: true
 }));
-
+app.options('*', cors()); // 🔁 Preflight support
 app.use(express.json());
 
-// ✅ Environment Debug
+// ✅ Debug
 console.log("🧪 SUPABASE_URL:", process.env.SUPABASE_URL);
-console.log("🧪 SUPABASE_ANON_KEY present:", !!process.env.SUPABASE_ANON_KEY);
 console.log("🧪 GEMINI_API_KEY present:", !!process.env.GEMINI_API_KEY);
 
-// ✅ Health Route
+// ✅ Health Check
 app.get('/', (req, res) => {
   res.send("✅ ResumeCraft Backend Running!");
 });
 
 // ✅ Import Routes
 const resumeDbRoutes = require('./routes/resume-db');
-const generateResumeRoute = require('./routes/generate-resume');  // You still need to add this file
-const renderHtmlRoute = require('./routes/render-html');           // Optional: for template preview if needed
+const generateResumeRoute = require('./routes/generate-resume');
+const renderHtmlRoute = require('./routes/render-html');
 
-// ✅ Use Routes
+// ✅ Use Routes (Only Once Each)
 app.use('/api/resumes', resumeDbRoutes);
-app.use('/api/generate-resume', generateResumeRoute);
+app.use('/api', generateResumeRoute); // will map to /api/generate-resume
 app.use('/api/render-template', renderHtmlRoute);
 
+// ✅ Start server
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`🚀 Server running on http://localhost:${PORT}`);
