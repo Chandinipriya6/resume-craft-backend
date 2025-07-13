@@ -35,11 +35,12 @@ const renderHtmlRoute = require('./routes/render-html');
 
 // ✅ Use Routes (Only Once Each)
 app.use('/api/resumes', resumeDbRoutes);
-app.use('/api', generateResumeRoute); // will map to /api/generate-resume
+app.use('/api/generate-resume', generateResumeRoute); // will map to /api/generate-resume
 app.use('/api/render-template', renderHtmlRoute);
 
 // ✅ Start server
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 10000;
 app.listen(PORT, () => {
-  console.log(`🚀 Server running on http://localhost:${PORT}`);
+  //console.log(`🚀 Server running on http://localhost:${PORT}`);
+  console.log(`🚀 Server running on port ${PORT}`);
 });

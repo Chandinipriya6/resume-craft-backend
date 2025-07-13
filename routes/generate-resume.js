@@ -9,7 +9,7 @@ const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 const SUPABASE_TEMPLATE_URL = process.env.SUPABASE_TEMPLATE_URL;
 const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:5000';
 
-router.post('/generate-resume', async (req, res) => {
+router.post('/', async (req, res) => {
   const {
     name,
     email,
