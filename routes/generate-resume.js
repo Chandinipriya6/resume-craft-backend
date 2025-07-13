@@ -10,6 +10,7 @@ const SUPABASE_TEMPLATE_URL = process.env.SUPABASE_TEMPLATE_URL;
 const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:5000';
 
 router.post('/', async (req, res) => {
+  console.log('🔽 Input Body:', JSON.stringify(req.body, null, 2)); 
   const {
     name,
     email,
