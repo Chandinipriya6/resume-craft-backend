@@ -16,7 +16,9 @@ app.use(cors({
   methods: ["GET", "POST", "PUT", "DELETE"],
   credentials: true
 }));
-app.options('*', cors()); // 🔁 Preflight support
+app.options('*',(req,res)=>{
+  res.sendStatus(200);
+}); // 🔁 Preflight support
 app.use(express.json());
 
 // ✅ Debug

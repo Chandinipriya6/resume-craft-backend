@@ -63,6 +63,8 @@ router.post("/save", async (req, res) => {
     custom_sections,
     template_url
   } = req.body;
+  console.log("📥 Received resume data on backend:", req.body);
+
 
   const resumePayload = {
     user_id,
@@ -81,7 +83,9 @@ router.post("/save", async (req, res) => {
   try {
     const { data, error } = await req.supabase
       .from("resumes")
-      .insert([resumePayload])
+      .upsert([resumePayload],{
+        onConflict: ['user_id', 'template_url']  // ✅ avoid duplicate error
+      })
       .select();
 
     if (error) {
